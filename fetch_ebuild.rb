@@ -102,34 +102,24 @@ class RubyEbuild
 end
 
 CACHE_FILE = "name.dat"
-PORTDIRS = %w(/usr/portage /usr/local/portage /var/lib/layman/ .)
+PORTDIRS = %w(/usr/portage /usr/local/portage /var/lib/layman/ /home/clx/ruby-overlay .)
 DISTDIR = "distfiles"
 
 #URL = "http://rubygems.org/gems"
 URL = "https://ruby.taobao.org/gems"
 
-ARGV.each do |name|
+ARGV.each do |para|
   puts "--------------------------------------------------------->"
-  if !File.exist?(CACHE_FILE) || ((Time.now - File.ctime(CACHE_FILE)) > (3 * 24 * 60 * 60))
-    File.rename(CACHE_FILE, CACHE_FILE + ".bak") if File.exist?(CACHE_FILE)
-    puts "Caching gem list ..."
-    system "gem list -r -s #{URL} > #{CACHE_FILE}"
+
+  index = para.rindex("-")
+  
+
+  if index.nil?
+    puts "Usage: #{__FILE__} name-version"
+    exit 1
   end
-
-  h = Hash.new
-
-  File.open(CACHE_FILE).each_line do |line|
-    gem_name, s = line.split
-    gem_version = s.delete("(),") if s
-    h[gem_name] = gem_version
-  end
-
-  unless h.include?(name)
-    puts "No gem: #{name} found!"
-    next
-  end
-
-  version = h[name]
+  name = para[0, index]
+  version = para[(index+1)..-1]
 
   if PORTDIRS.any? { |dir| File.exist? "#{dir}/dev-ruby/#{name}/#{name}-#{version}.ebuild" }
     puts "The ebuild: #{name} #{version} already exist"
